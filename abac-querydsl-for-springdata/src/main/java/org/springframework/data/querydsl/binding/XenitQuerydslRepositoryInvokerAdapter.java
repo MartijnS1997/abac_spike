@@ -1,6 +1,7 @@
 package org.springframework.data.querydsl.binding;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.Id;
@@ -67,7 +68,7 @@ public class XenitQuerydslRepositoryInvokerAdapter extends QuerydslRepositoryInv
     @Override
     public <T> T invokeSave(T object) {
 
-        Disjunction abacContext = ABACContext.getCurrentAbacContext();
+        List<Disjunction> abacContext = ABACContext.getCurrentAbacContext();
         if (abacContext == null) {
             return super.invokeSave(object);
         }

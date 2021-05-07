@@ -51,8 +51,8 @@
         <groupId>be.heydari</groupId>
         <artifactId>abac-lib</artifactId>
         <version>1.0-SNAPSHOT</version>
-        <scope>system</scope>
-        <systemPath>/Users/warrenpa/.m2/repository/be/heydari/abac-lib/1.0-SNAPSHOT/abac-lib-1.0-SNAPSHOT.jar</systemPath>
+<!--        <scope>system</scope>-->
+<!--        <systemPath>/Users/warrenpa/.m2/repository/be/heydari/abac-lib/1.0-SNAPSHOT/abac-lib-1.0-SNAPSHOT.jar</systemPath>-->
     </dependency>
     <dependency> 
         <groupId>com.querydsl</groupId> 

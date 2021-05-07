@@ -2,15 +2,17 @@ package org.springframework.data.querydsl;
 
 import be.heydari.lib.expressions.Disjunction;
 
+import java.util.List;
+
 public class ABACContext {
 
-    private static ThreadLocal<Disjunction> currentAbacContext = new InheritableThreadLocal<Disjunction>();
+    private static ThreadLocal<List<Disjunction>> currentAbacContext = new InheritableThreadLocal<>();
 
-    public static Disjunction getCurrentAbacContext() {
+    public static List<Disjunction> getCurrentAbacContext() {
         return currentAbacContext.get();
     }
 
-    public static void setCurrentAbacContext(Disjunction tenant) {
+    public static void setCurrentAbacContext(List<Disjunction> tenant) {
         currentAbacContext.set(tenant);
     }
 

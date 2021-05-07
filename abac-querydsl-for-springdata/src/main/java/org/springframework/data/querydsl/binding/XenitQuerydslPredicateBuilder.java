@@ -57,14 +57,17 @@ public class XenitQuerydslPredicateBuilder {
 //        }
 
         // abac context
-        Disjunction abacContext = org.springframework.data.querydsl.ABACContext.getCurrentAbacContext();
+        List<Disjunction> abacContext = org.springframework.data.querydsl.ABACContext.getCurrentAbacContext();
         if (abacContext != null) {
 
             Class<?> subjectType = org.springframework.data.querydsl.EntityContext.getCurrentEntityContext().getJavaType();
             PathBuilder entityPath = new PathBuilder(subjectType, toAlias(subjectType));
-            BooleanExpression abacExpr = QueryDslUtils.from(abacContext, entityPath, org.springframework.data.querydsl.EntityContext.getCurrentEntityContext().getJavaType());
-            Assert.notNull(abacExpr, "abac expression cannot be null");
-            builder.and(abacExpr);
+
+            for (Disjunction disj: abacContext) {
+                BooleanExpression abacExpr = QueryDslUtils.from(disj, entityPath, org.springframework.data.querydsl.EntityContext.getCurrentEntityContext().getJavaType());
+                Assert.notNull(abacExpr, "abac expression cannot be null");
+                builder.and(abacExpr);
+            }
         }
 
         for (Entry<String, List<String>> entry : values.entrySet()) {
