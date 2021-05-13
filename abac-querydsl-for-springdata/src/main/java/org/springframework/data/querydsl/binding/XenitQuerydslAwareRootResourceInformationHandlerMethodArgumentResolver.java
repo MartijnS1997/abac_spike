@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.springframework.core.MethodParameter;
-import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+import org.springframework.data.jpa.repository.support.QuerydslJpaPredicateExecutor;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
@@ -56,17 +56,22 @@ public class XenitQuerydslAwareRootResourceInformationHandlerMethodArgumentResol
 //        if (!parameter.hasParameterAnnotation(QuerydslPredicate.class)) {
 //            return invoker;
 //        }
+        repositories.getRepositoryFor(domainType).map(it -> {
+            System.out.println(it.getClass());
+            return 0;
+        });
+
 
         return repositories.getRepositoryFor(domainType)//
-                .filter(it -> QuerydslPredicateExecutor.class.isInstance(it))//
-                .map(it -> QuerydslPredicateExecutor.class.cast(it))//
+                .filter(it -> QuerydslJpaPredicateExecutor.class.isInstance(it))//
+                .map(it -> QuerydslJpaPredicateExecutor.class.cast(it))//
                 .flatMap(it -> getRepositoryAndPredicate(it, domainType, parameters))//
                 .map(it -> getQuerydslAdapter(invoker, it.getFirst(), it.getSecond()))//
                 .orElse(invoker);
     }
 
-    private Optional<Pair<QuerydslPredicateExecutor<?>, Predicate>> getRepositoryAndPredicate(
-            QuerydslPredicateExecutor<?> repository, Class<?> domainType, Map<String, String[]> parameters) {
+    private Optional<Pair<QuerydslJpaPredicateExecutor<?>, Predicate>> getRepositoryAndPredicate(
+            QuerydslJpaPredicateExecutor<?> repository, Class<?> domainType, Map<String, String[]> parameters) {
 
         ClassTypeInformation<?> type = ClassTypeInformation.from(domainType);
 
@@ -78,8 +83,8 @@ public class XenitQuerydslAwareRootResourceInformationHandlerMethodArgumentResol
 
     @SuppressWarnings("unchecked")
     private static RepositoryInvoker getQuerydslAdapter(RepositoryInvoker invoker,
-            QuerydslPredicateExecutor<?> repository, Predicate predicate) {
-        return new XenitQuerydslRepositoryInvokerAdapter(invoker, (QuerydslPredicateExecutor<Object>) repository, predicate);
+            QuerydslJpaPredicateExecutor<?> repository, Predicate predicate) {
+        return new XenitQuerydslRepositoryInvokerAdapter(invoker, new NoCountQuerydslJpaPredicateExecutor<>((QuerydslJpaPredicateExecutor<Object>) repository), predicate);
     }
 
     /**

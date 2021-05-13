@@ -98,8 +98,8 @@ public class ABACConfiguration {
             EntityManagerContext.setCurrentEntityContext(em, tm);
 
             String abacMode = request.getHeader("X-ABAC-Mode");
-//            System.out.println("abacMode: " + abacMode);
 
+//            long start = System.currentTimeMillis();
             // Emad
             switch (abacMode) {
                 case "multi":
@@ -109,6 +109,7 @@ public class ABACConfiguration {
                 default:
                     singleModeContext(request);
             }
+//            long end = System.currentTimeMillis();
 
             filterChain.doFilter(servletRequest, servletResponse);
 
@@ -132,23 +133,17 @@ public class ABACConfiguration {
         }
 
         private void multiModeContext(HttpServletRequest request) throws IOException {
-//            System.out.println("running multimode context");
             String policyJson = request.getHeader("X-ABAC-Policies");
             ObjectMapper mapper = new ObjectMapper();
-
             Map<String, String> policyTree = (Map<String, String>) mapper.readValue(policyJson, Map.class);
             String path = request.getServletPath();
 
             List<Disjunction> disjunctions = new ArrayList<>();
-
             for (String key: policyTree.keySet()) {
-//                System.out.println("key: " + key);
-//                System.out.println("path: " + path);
                 Pattern pattern = Pattern.compile(key);
                 Matcher m = pattern.matcher(path);
                 if (m.matches()) {
                     Disjunction disjunction = decodeDisjunction(policyTree.get(key));
-//                    System.out.println("adding disjunction " + disjunction);
                     disjunctions.add(disjunction);
                 }
             }

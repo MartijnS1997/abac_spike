@@ -11,6 +11,8 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.DomainObjectUtils;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.querydsl.ABACContext;
 import org.springframework.data.querydsl.EntityContext;
 import org.springframework.data.querydsl.EntityManagerContext;
@@ -36,6 +38,7 @@ public class XenitQuerydslRepositoryInvokerAdapter extends QuerydslRepositoryInv
 
     private QuerydslPredicateExecutor<Object> executor;
     private Predicate predicate;
+    private RepositoryInvoker delegate;
 
     private ConversionService conversionService = new DefaultFormattingConversionService();
 
@@ -43,7 +46,13 @@ public class XenitQuerydslRepositoryInvokerAdapter extends QuerydslRepositoryInv
         super(delegate, executor, predicate);
         this.executor = executor;
         this.predicate = predicate;
+        this.delegate = delegate;
     }
+
+    public Iterable<Object> invokeFindAll(Pageable pageable) {
+        return this.executor.findAll(this.predicate, Pageable.unpaged());
+    }
+
 
     @Override
     public <T> Optional<T> invokeFindById(Object id) {
