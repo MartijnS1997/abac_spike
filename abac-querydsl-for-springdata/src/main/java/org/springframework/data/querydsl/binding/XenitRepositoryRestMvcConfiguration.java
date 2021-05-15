@@ -2,6 +2,7 @@ package org.springframework.data.querydsl.binding;
 
 import java.util.Optional;
 
+import brave.Tracer;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,11 +35,14 @@ public class XenitRepositoryRestMvcConfiguration extends RepositoryRestMvcConfig
 
     ConversionService defaultConversionService;
 
-    @Autowired ApplicationContext applicationContext;
+    @Autowired
+    ApplicationContext applicationContext;
+
+    @Autowired
+    Tracer tracer;
 
     public XenitRepositoryRestMvcConfiguration(ApplicationContext context, ObjectFactory<ConversionService> conversionService, Optional<LinkRelationProvider> relProvider, Optional<CurieProvider> curieProvider, Optional<HalConfiguration> halConfiguration, ObjectProvider<ObjectMapper> objectMapper, ObjectProvider<RepresentationModelProcessorInvoker> invoker, MessageResolver resolver, GeoModule geoModule) {
         super(context, conversionService, relProvider, curieProvider, halConfiguration, objectMapper, invoker, resolver, geoModule);
-
         this.defaultConversionService = new DefaultFormattingConversionService();
     }
 
@@ -64,14 +68,13 @@ public class XenitRepositoryRestMvcConfiguration extends RepositoryRestMvcConfig
 
     @Override
     public RootResourceInformationHandlerMethodArgumentResolver repoRequestArgumentResolver(Repositories repositories, ResourceMetadataHandlerMethodArgumentResolver resourceMetadataHandlerMethodArgumentResolver, RepositoryInvokerFactory repositoryInvokerFactory) {
-
         if (QuerydslUtils.QUERY_DSL_PRESENT) {
 
             QuerydslBindingsFactory factory = applicationContext.getBean(QuerydslBindingsFactory.class);
             XenitQuerydslPredicateBuilder predicateBuilder = new XenitQuerydslPredicateBuilder(defaultConversionService, factory.getEntityPathResolver());
 
             return new XenitQuerydslAwareRootResourceInformationHandlerMethodArgumentResolver(repositories,
-                    repositoryInvokerFactory, resourceMetadataHandlerMethodArgumentResolver, predicateBuilder, factory);
+                    repositoryInvokerFactory, resourceMetadataHandlerMethodArgumentResolver, predicateBuilder, factory, tracer);
         }
 
         return new RootResourceInformationHandlerMethodArgumentResolver(repositories, repositoryInvokerFactory,

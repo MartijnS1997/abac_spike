@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import brave.Tracer;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.support.Repositories;
@@ -25,6 +26,7 @@ public class XenitQuerydslAwareRootResourceInformationHandlerMethodArgumentResol
     private final Repositories repositories;
     private final XenitQuerydslPredicateBuilder predicateBuilder;
     private final QuerydslBindingsFactory factory;
+    private final Tracer tracer;
 
     /**
      * Creates a new {@link QuerydslAwareRootResourceInformationHandlerMethodArgumentResolver} using the given
@@ -36,13 +38,14 @@ public class XenitQuerydslAwareRootResourceInformationHandlerMethodArgumentResol
      */
     public XenitQuerydslAwareRootResourceInformationHandlerMethodArgumentResolver(Repositories repositories,
             RepositoryInvokerFactory invokerFactory, ResourceMetadataHandlerMethodArgumentResolver resourceMetadataResolver,
-            XenitQuerydslPredicateBuilder predicateBuilder, QuerydslBindingsFactory factory) {
+            XenitQuerydslPredicateBuilder predicateBuilder, QuerydslBindingsFactory factory, Tracer tracer) {
 
         super(repositories, invokerFactory, resourceMetadataResolver);
 
         this.repositories = repositories;
         this.predicateBuilder = predicateBuilder;
         this.factory = factory;
+        this.tracer = tracer;
     }
 
     /*
@@ -61,7 +64,7 @@ public class XenitQuerydslAwareRootResourceInformationHandlerMethodArgumentResol
                 .filter(it -> QuerydslPredicateExecutor.class.isInstance(it))//
                 .map(it -> QuerydslPredicateExecutor.class.cast(it))//
                 .flatMap(it -> getRepositoryAndPredicate(it, domainType, parameters))//
-                .map(it -> getQuerydslAdapter(invoker, it.getFirst(), it.getSecond()))//
+                .map(it -> getQuerydslAdapter(invoker, it.getFirst(), it.getSecond(), tracer))//
                 .orElse(invoker);
     }
 
@@ -78,8 +81,8 @@ public class XenitQuerydslAwareRootResourceInformationHandlerMethodArgumentResol
 
     @SuppressWarnings("unchecked")
     private static RepositoryInvoker getQuerydslAdapter(RepositoryInvoker invoker,
-            QuerydslPredicateExecutor<?> repository, Predicate predicate) {
-        return new XenitQuerydslRepositoryInvokerAdapter(invoker, (QuerydslPredicateExecutor<Object>) repository, predicate);
+            QuerydslPredicateExecutor<?> repository, Predicate predicate, Tracer tracer) {
+        return new XenitQuerydslRepositoryInvokerAdapter(invoker, (QuerydslPredicateExecutor<Object>) repository, predicate, tracer);
     }
 
     /**

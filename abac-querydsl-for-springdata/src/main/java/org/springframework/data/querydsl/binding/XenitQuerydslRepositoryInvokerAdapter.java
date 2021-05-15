@@ -6,11 +6,16 @@ import java.util.Optional;
 
 import javax.persistence.Id;
 
+import brave.Span;
+import brave.Tracer;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.DomainObjectUtils;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.querydsl.ABACContext;
 import org.springframework.data.querydsl.EntityContext;
 import org.springframework.data.querydsl.EntityManagerContext;
@@ -31,19 +36,37 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.PathBuilder;
 
 import be.heydari.lib.expressions.Disjunction;
+import org.springframework.util.ClassUtils;
 
 public class XenitQuerydslRepositoryInvokerAdapter extends QuerydslRepositoryInvokerAdapter {
 
     private QuerydslPredicateExecutor<Object> executor;
     private Predicate predicate;
+    private Tracer tracer;
 
     private ConversionService conversionService = new DefaultFormattingConversionService();
 
-    public XenitQuerydslRepositoryInvokerAdapter(RepositoryInvoker delegate, QuerydslPredicateExecutor<Object> executor, Predicate predicate) {
+    public XenitQuerydslRepositoryInvokerAdapter(RepositoryInvoker delegate, QuerydslPredicateExecutor<Object> executor, Predicate predicate, Tracer tracer) {
         super(delegate, executor, predicate);
+
+//        System.out.println("class: " + ClassUtils.getUserClass(executor));
+//        System.out.println("class: " + AopUtils.getTargetClass(executor));
+
         this.executor = executor;
         this.predicate = predicate;
+        this.tracer = tracer;
     }
+
+    @Override
+    public Iterable<Object> invokeFindAll(Pageable pageable) {
+        Span span = tracer.nextSpan().name("query");
+        try(Tracer.SpanInScope ws = tracer.withSpanInScope(span.start())) {
+            return this.executor.findAll(this.predicate, pageable);
+        } finally {
+            span.finish();
+        }
+    }
+
 
     @Override
     public <T> Optional<T> invokeFindById(Object id) {
